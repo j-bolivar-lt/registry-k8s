@@ -8,9 +8,15 @@ install:
 
 run:
 	sleep 3	
-	kubectl port-forward $$(kubectl get pods --namespace docker-registry -l "app=docker-registry,release=docker-registry" -o jsonpath="{.items[0].metadata.name}") 8080:5000 --namespace docker-registry
+	nohup kubectl port-forward $$(kubectl get pods --namespace docker-registry -l "app=docker-registry,release=docker-registry" -o jsonpath="{.items[0].metadata.name}") 8080:5000 --namespace docker-registry & 
+
+stop:
+	kill $$(ps aux | grep 'kubectl port-forward' | awk '{print $$2}')
 
 uninstall:
 	helm uninstall docker-registry --namespace docker-registry
 	kubectl delete namespace docker-registry
 
+loadtest:
+	docker pull ubuntu:latest
+	poetry run locust -f load_test.py --host=http://localhost:8080
