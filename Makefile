@@ -10,7 +10,11 @@ install-registry:
 install-dragonfly:
 	helm repo add dragonfly https://dragonflyoss.github.io/helm-charts/
 	helm install --create-namespace --namespace dragonfly-system dragonfly dragonfly/dragonfly -f dragonfly/values.yaml
-	kubectl -n dragonfly-system wait --for=condition=ready --all --timeout=10m pod
+	#kubectl -n dragonfly-system wait --for=condition=ready --all --timeout=10m pod
+
+uninstall-dragonfly:
+	helm uninstall dragonfly --namespace dragonfly-system
+	kubectl delete namespace dragonfly-system
 
 
 run-registry:
