@@ -32,3 +32,12 @@ loadtest:
 	docker pull ubuntu:latest
 	cd docker-registry && poetry install && poetry run locust -f load_test_registry.py --host=https://$$(awk -F "=" '/^username/ {print $$2}' config.ini):$$(awk -F "=" '/^password/ {print $$2}' config.ini)@$$(awk -F "=" '/^host/ {print $$2}' config.ini)
 
+
+install-minio:
+	helm repo add bitnami https://charts.bitnami.com/bitnami
+	helm install --create-namespace --namespace minio minio bitnami/minio -f docker-registry-minio/values.yml
+	kubectl -n minio wait --for=condition=ready --all --timeout=10m pod
+
+uninstall-minio:
+	helm uninstall minio --namespace minio
+	kubectl delete namespace minio
