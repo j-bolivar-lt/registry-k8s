@@ -3,7 +3,6 @@ kind: Kustomization
 
 resources:
 - namespace.yml
-- configmap.yml
 
 namespace: minio
 
@@ -14,6 +13,3 @@ helmCharts:
   repo: https://charts.bitnami.com/bitnami
   valuesFile: values.yml
   version: 12.6.10
-
-patches:
-- path: patch.yml
