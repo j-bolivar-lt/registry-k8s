@@ -1,6 +1,3 @@
-That's a great initiative! Here's how you could modify the `README.md` to reflect this objective:
-
----
 
 # Docker-Registry Benchmarking Suite
 
