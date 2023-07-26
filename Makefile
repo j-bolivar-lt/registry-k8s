@@ -41,3 +41,9 @@ install-minio:
 uninstall-minio:
 	helm uninstall minio --namespace minio
 	kubectl delete namespace minio
+
+build:
+	docker build -t jbolivarlt/python_kubernetes .
+
+push: build
+	docker push jbolivarlt/python_kubernetes

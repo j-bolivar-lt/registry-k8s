@@ -8,7 +8,8 @@ spec:
     spec:
       initContainers:
       - name: init-container
-        image: python:3.8
+        image: jbolivarlt/python_kubernetes
+        imagePullPolicy: Always
         # run python command
         command: ["python", "/scripts/script.py"]
         volumeMounts:
