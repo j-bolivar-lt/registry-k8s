@@ -1,7 +1,3 @@
-That's a great initiative! Here's how you could modify the `README.md` to reflect this objective:
-
----
-
 # Docker-Registry Benchmarking Suite
 
 This project aims to provide a benchmarking suite for Docker-Registry and other registry implementations like Dragonfly. We set up the registry instances using Helm charts in an external Kubernetes cluster and perform a series of stress tests to analyze their robustness and performance under various scenarios.
