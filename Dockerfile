@@ -9,4 +9,4 @@ RUN useradd -ms /bin/bash python-user
 USER python-user
 
 # Install the kubernetes and requests libraries
-RUN pip install --user kubernetes requests
+RUN pip install --user kubernetes requests minio

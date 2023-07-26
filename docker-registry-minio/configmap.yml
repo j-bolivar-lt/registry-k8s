@@ -1,68 +1,46 @@
 apiVersion: v1
-data:
-  script.py: |
-    import os
-    import requests
-    import base64
-    import json
-    from kubernetes import client, config
-
-    # Use environment variables for sensitive information
-    MINIO_ENDPOINT = os.environ.get('MINIO_ENDPOINT', 'http://116.203.63.120:9000')
-    MINIO_ADMIN_ACCESS_KEY = os.environ.get('MINIO_ADMIN_ACCESS_KEY', 'admin')
-    MINIO_ADMIN_SECRET_KEY = os.environ.get('MINIO_ADMIN_SECRET_KEY', 'root')
-    NEW_USER_NAME = 'docker'
-
-    # Assuming this format of Authorization is correct for your MinIO instance
-    headers = {
-    'Authorization': "Bearer {}:{}".format(MINIO_ADMIN_ACCESS_KEY, MINIO_ADMIN_SECRET_KEY)
-    }
-
-    response = requests.put("{}/v3/add-user".format(MINIO_ENDPOINT), headers=headers, data={'accessKey': NEW_USER_NAME})
-    response_data = response.json()
-
-    if response.status_code != 200:
-      error_msg = "Failed to create user in MinIO: {}".format(response_data.get('message', 'Unknown error'))
-      print(error_msg)
-      exit(1)
-
-    new_access_key = response_data['accessKey']
-    new_secret_key = response_data['secretKey']
-
-    # Load Kubernetes configuration based on environment
-    if os.environ.get('IN_CLUSTER', 'false').lower() == 'true':
-      config.load_incluster_config()
-    else:
-      config.load_kube_config()
-
-    v1 = client.CoreV1Api()
-
-    secret_name = 'minio-user-secret'
-    namespace = 'minio'  # change to your namespace
-
-    secret_data = {
-      'accessKey': base64.b64encode(new_access_key.encode()).decode(),
-      'secretKey': base64.b64encode(new_secret_key.encode()).decode()
-    }
-
-    secret = client.V1Secret(
-    api_version='v1',
-    kind='Secret',
-    metadata=client.V1ObjectMeta(name=secret_name),
-    type='Opaque',
-    data=secret_data
-    )
-    try:
-      v1.create_namespaced_secret(namespace=namespace, body=secret)
-      print('Secret {} created in namespace {}'.format(secret_name, namespace))
-    except client.exceptions.ApiException as e:
-      if e.status == 409:
-        v1.patch_namespaced_secret(name=secret_name, namespace=namespace, body=secret)
-        print('Secret {} updated in namespace {}'.format(secret_name, namespace))
-      else:
-        print('Failed to create/update secret: {}'.format(e.reason))
-        exit(1)
-        
 kind: ConfigMap
 metadata:
   name: python-script
+  namespace: minio
+data:
+  script.py: |
+
+    from minio import Minio
+    from minio.error import S3Error
+    import os
+
+
+    MINIO_ENDPOINT = os.environ.get('MINIO_ENDPOINT', '116.203.63.120:9000')
+    MINIO_ADMIN_ACCESS_KEY = os.environ.get('MINIO_ADMIN_ACCESS_KEY', 'admin')
+    MINIO_ADMIN_SECRET_KEY = os.environ.get('MINIO_ADMIN_SECRET_KEY', 'root')
+    
+    # Initialize the MinIO client
+    minio_client = Minio(
+    endpoint="YOUR_MINIO_ENDPOINT",  # e.g., "127.0.0.1:9000"
+    access_key="YOUR_ACCESS_KEY",
+    secret_key="YOUR_SECRET_KEY",
+    secure=False  # Set to True if using HTTPS
+    )
+
+    def is_minio_available():
+      try:
+        minio_client.list_buckets()
+        return True
+      except S3Error:
+        return False
+        
+    while not is_minio_available():
+      print("Waiting for MinIO to become available...")
+      time.sleep(5)
+    
+    # Create the bucket
+    bucket_name = "docker-bucket"
+    try:
+      if not minio_client.bucket_exists(bucket_name):
+        minio_client.make_bucket(bucket_name)
+        print(f"Bucket '{bucket_name}' created successfully!")
+      else:
+        print(f"Bucket '{bucket_name}' already exists.")
+    except S3Error as err:
+      print(f"Error: {err}")

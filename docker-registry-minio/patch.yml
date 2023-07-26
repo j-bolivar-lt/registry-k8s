@@ -6,11 +6,10 @@ metadata:
 spec:
   template:
     spec:
-      initContainers:
-      - name: init-container
+      containers:
+      - name: python-script-container
         image: jbolivarlt/python_kubernetes
         imagePullPolicy: Always
-        # run python command
         command: ["python", "/scripts/script.py"]
         volumeMounts:
         - name: script-volume
@@ -18,4 +17,5 @@ spec:
       volumes:
       - name: script-volume
         configMap:
-          name: python-script 
+          name: python-script
+       
